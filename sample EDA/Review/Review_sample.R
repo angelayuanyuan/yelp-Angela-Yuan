@@ -2,7 +2,7 @@
 #### Read JSON File####
 #######################
 
-## This file will create one sample dataframe for review data
+## use sample review data to conduct initial text analysis
 
 # clear memory
 rm(list = ls())
@@ -17,14 +17,15 @@ library(stringr)
 library(ggplot2)
 library(ggraph)
 library(widyr)
+library(wordcloud)
 
 # load the original data
-setwd("~/Desktop/yelp data challenge/Yelp data")
+setwd("~/Desktop/yelp github/Yelp")
 txt = readLines("raw_data/review.json")
 print("original review data loaded")
 
 # number of chunks for initial processing
-n_chunk = 50
+n_chunk = 30
 
 # number of lines to read per chunk except the last one
 n_lines = round(length(txt)/n_chunk)
@@ -67,7 +68,11 @@ print("chunk 1 processing finished")
 review_chinese_restaurants <- df_review%>%
   filter(str_detect(text, "Chinese"))
 
-# tidy text
+# add new customized stop word
+my_stop_word <- data.frame(word=character(5))
+my_stop_word$word <- c("chinese","food","restaurant","chinese food","chinese restaurant")
+
+# tokenizing by one gram
 review_Chinese_word <- review_chinese_restaurants%>%
   group_by(user_id)%>%
   mutate(linenumber = row_number())%>%
@@ -79,12 +84,13 @@ review_Chinese_word <- review_Chinese_word%>%
   ungroup()%>%
   select(user_id,linenumber,word,stars)
   
-# tokenizing by one gram
+# visualization
 overall_word_freq <- review_Chinese_word%>%
   count(word,sort=TRUE)
 
 overall_word_freq%>%
-  filter(n >300)%>%
+  anti_join(my_stop_word)%>%
+  filter(n >500)%>%
   mutate(word = reorder(word, n))%>%
   ggplot(aes(word, n, fill=(desc(n))))+
   geom_col() +
@@ -92,6 +98,11 @@ overall_word_freq%>%
   labs(title="Overall Word Frequency")+
   theme(plot.title = element_text(hjust = 0.5))+
   coord_flip()
+
+# word cloud
+overall_word_freq %>%
+  anti_join(my_stop_word)%>%
+  with(wordcloud(word, n, max.words = 100,colors=n))
 
 # Tokenizing by n-gram
 review_Chinese_bigrams <- review_chinese_restaurants %>%
@@ -104,5 +115,37 @@ review_Chinese_bigrams <- review_Chinese_bigrams%>%
   ungroup()%>%
   select(user_id,linenumber,bigram,stars)
 
+# bigrams frequency
+review_Chinese_bigrams <- review_Chinese_bigrams%>%
+  count(bigram, sort = TRUE)
 
+bigrams_seperated <- review_Chinese_bigrams%>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+ 
+bigrams_filtered <- bigrams_seperated %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)
+
+bigrams_united <- bigrams_filtered %>%
+  unite(bigram, word1, word2, sep = " ")
+
+# visualization
+my_stop_bigram <- my_stop_word
+colnames(my_stop_bigram) <- "bigram"
+
+bigrams_united%>%
+  anti_join(my_stop_bigram)%>%
+  filter(n>60)%>%
+  mutate(bigram = reorder(bigram, n))%>%
+  ggplot(aes(bigram, n, fill=(desc(n))))+
+  geom_col() +
+  xlab(NULL) +
+  labs(title="Overall Bigram Frequency")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  coord_flip()
+
+# word cloud
+bigrams_united %>%
+  anti_join(my_stop_bigram)%>%
+  with(wordcloud(bigram, n, max.words = 50,colors=n))
   
