@@ -18,6 +18,7 @@ library(tidyverse)
 library(dplyr)
 library(lme4)
 library(plotly)
+library(sentimentr)
 
 # load data
 load("~/Desktop/yelp github/Yelp/rdata/info.chinese.Rdata")
@@ -99,10 +100,11 @@ p <- info.chinese %>%
 
 p
 
-api_create(p,filename = "location-graph", sharing = "public")
+https://plot.ly/~angelayuanyuan/1/
+#api_create(p,filename = "location-graph", sharing = "public")
 
 ###########################
-### Sentiment Analysis ####
+### Text Analysis ####
 ###########################
 
 # add new customized stop word
@@ -294,15 +296,44 @@ ggplot(user)+
 ###########################
 
 # sentiment polarity model
-polarity <- counts.polarity(sent_detect(yelp.chinese$text), polarity.frame=REVIEWS_DICT, constrain=T)
+sentences <- get_sentences(yelp.chinese$text)
 
-# linear regression
+polarity <- sentiment(sentences, polarity_dt = lexicon::hash_sentiment_jockers, valence_shifters_dt = lexicon::hash_valence_shifters, hyphen = " ")
+
+sentences.sentiment <- polarity%>%
+  group_by(element_id)%>%
+  mutate(sentiment=mean(sentiment), word.count=sum(word_count))%>%
+  slice(1)%>%
+  select(element_id,sentiment,word.count)
+
+yelp.chinese$element_id <- c(1:length(sentences.sentiment$element_id))
+yelp.chinese <- left_join(yelp.chinese,sentences.sentiment)
+yelp.chinese$word.count[is.na(yelp.chinese$word.count)] <- 0
+
+# are there relationship between the length of review and ratings
+
+ggplot(yelp.chinese)+
+  geom_boxplot(aes(stars,word.count,group = stars,fill= "stars"))+
+  theme(legend.position = "none") # doesn't look like
+
+
+
+# are there relationship between the ratings and the their sentiment score of reviews
+
+ggplot(yelp.chinese)+
+  geom_boxplot(aes(stars,sentiment,group = stars,fill= "stars"))+
+  theme(legend.position = "none") # well, the trend is weak
+
 
 # combine ratings with business attributes
-yelp.chinese <- left_join(yelp.chinese,attr.chinese)
+yelp.chinese <- yelp.chinese%>%
+  group_by(business_id)%>%
+  mutate(average_stars = mean(stars))
 
-mod.1 <- lm(stars~RestaurantsPriceRange2+business.parking+BikeParking+NoiseLevel+RestaurantsGoodForGroups+RestaurantsDelivery+HasTV+WiFi+RestaurantsTakeOut+RestaurantsReservations+RestaurantsTableService ,data = yelp.chinese) 
-summary(mod.1)
+yelp.chinese <- left_join(yelp.chinese,attr.chinese, by= "business_id")
   
-mllm <- lmer(stars ~ (1|average_stars),data = yelp.chinese)
-display(mllm)
+mllm.1 <- lmer(stars ~ sentiment+(1|average_stars),data = yelp.chinese)
+summary(mllm.1)
+binnedplot(fitted(mllm.1),residuals(mllm.1))
+
+mllm.2 <- lmer(stars ~ sentiment+average_stars+(1|average_stars),data = yelp.chinese)
