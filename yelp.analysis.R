@@ -19,6 +19,9 @@ library(dplyr)
 library(lme4)
 library(plotly)
 library(sentimentr)
+library(VGAM)
+library(wesanderson)
+library(rstanarm)
 
 # load data
 load("~/Desktop/yelp github/Yelp/rdata/info.chinese.Rdata")
@@ -100,11 +103,11 @@ p <- info.chinese %>%
 
 p
 
-https://plot.ly/~angelayuanyuan/1/
+https://plot.ly/~angelayuanyuan/1/ # just in case you're interested in where are the restaurants we analysis on
 #api_create(p,filename = "location-graph", sharing = "public")
 
 ###########################
-### Text Analysis ####
+###### Text Analysis ######
 ###########################
 
 # add new customized stop word
@@ -113,7 +116,7 @@ my_stop_word$word <- c("chinese","food","restaurant","chinese food","chinese res
 
 # tokenizing by one gram
 review.Chinese.word <- review %>%
-  group_by(user_id)%>%
+  group_by(id)%>%
   mutate(linenumber = row_number())%>%
   unnest_tokens(word, text)%>%
   anti_join(stop_words)%>%
@@ -130,7 +133,7 @@ word.freq %>%
 
 # tokenizing by bigram
 review.Chinese.bigrams <- review %>%
-  group_by(user_id)%>%
+  group_by(id)%>%
   mutate(linenumber = row_number())%>%
   unnest_tokens(bigram, text, token = "ngrams", n = 2)
 
@@ -232,6 +235,8 @@ ggplot(word.afinn, aes(reviews, average_stars)) +
   xlab("Number of Reviews") +
   ylab("Average Stars")
 
+
+
 ###########################
 ######## EDA Users ########
 ###########################
@@ -298,7 +303,7 @@ ggplot(user)+
 # sentiment polarity model
 sentences <- get_sentences(yelp.chinese$text)
 
-polarity <- sentiment(sentences, polarity_dt = lexicon::hash_sentiment_jockers, valence_shifters_dt = lexicon::hash_valence_shifters, hyphen = " ")
+polarity <- sentiment(sentences, polarity_dt = lexicon::hash_sentiment_jockers, valence_shifters_dt = lexicon::hash_valence_shifters, hyphen = " ") # get a sentiment score for each review (running this line might take a while...)
 
 sentences.sentiment <- polarity%>%
   group_by(element_id)%>%
@@ -311,10 +316,13 @@ yelp.chinese <- left_join(yelp.chinese,sentences.sentiment)
 yelp.chinese$word.count[is.na(yelp.chinese$word.count)] <- 0
 
 # are there relationship between the length of review and ratings
+ggplot(yelp.chinese)+
+  geom_histogram(aes(word.count,fill=as.factor(stars)))
+
 
 ggplot(yelp.chinese)+
   geom_boxplot(aes(stars,word.count,group = stars,fill= "stars"))+
-  theme(legend.position = "none") # doesn't look like
+  theme(legend.position = "none") # doesn't look like. review length seems to be related to personal habit rather than restaurants' quality
 
 
 
@@ -331,9 +339,174 @@ yelp.chinese <- yelp.chinese%>%
   mutate(average_stars = mean(stars))
 
 yelp.chinese <- left_join(yelp.chinese,attr.chinese, by= "business_id")
-  
-mllm.1 <- lmer(stars ~ sentiment+(1|average_stars),data = yelp.chinese)
-summary(mllm.1)
-binnedplot(fitted(mllm.1),residuals(mllm.1))
 
-mllm.2 <- lmer(stars ~ sentiment+average_stars+(1|average_stars),data = yelp.chinese)
+yelp.chinese$business.parking[is.na(yelp.chinese$business.parking)] <- 0
+
+# first, let's review how our data looks like
+hist(yelp.chinese$stars) # definetly not normal
+hist(yelp.chinese$sentiment)
+
+# simple linear models
+lm.1 <- lm(stars~sentiment, data = yelp.chinese)
+summary(lm.1)
+plot(lm.1, which = 1) 
+
+lm.2 <- lm(stars~sentiment+RestaurantsPriceRange2+business.parking+NoiseLevel,data = yelp.chinese)
+summary(lm.2)
+plot(lm.2, which = 1) # clearly, this is not our model. there are seperated trends in the residual plot, we might want to add group level predictors later
+
+# logistic models
+# try split the data into ratings higher than 3 stars and ratings lower than 3 stars
+yelp.chinese$better <- ifelse(yelp.chinese$stars>=3,1,0) # consider restaurants with 3 or more stars better restaurants
+
+# then how does the data look like
+yelp.chinese$better <- as.factor(yelp.chinese$better)
+ggplot(yelp.chinese)+
+  geom_bar(aes(better,fill = better))
+p.binom <- table(yelp.chinese$better)
+p.binom # approximately 1:4
+
+glm.1 <- glm(better~sentiment,family = binomial(link = "logit"),data = yelp.chinese)
+summary(glm.1)
+plot(glm.1,which = 1)
+y.glm.1 <- data.frame(fitted(glm.1))
+y.glm.1$better <- as.factor(ifelse(y.glm.1$fitted.glm.1.>0.5,1,0))
+
+ggplot(y.glm.1)+
+  geom_bar(aes(better,fill = better)) # we overestimate the difference of numbers between restaurants with above 3 stars and below 3 stars
+
+glm.2 <- glm(better~sentiment+RestaurantsPriceRange2+business.parking+NoiseLevel,family = binomial(link = "logit"),data = yelp.chinese)
+summary(glm.2) # perfect seperation
+
+# try diagnose the model by letting out one predictor each time and see which one causes perfect seperation
+# omit the whole diagnose process here, the problem comes down to NoiseLevel and business.parking
+
+ggplot(yelp.chinese)+
+  geom_violin(aes(x=NoiseLevel,y=stars,group=NoiseLevel,fill=NoiseLevel))+
+  scale_fill_brewer(palette = "Reds")
+
+yelp.chinese$business.parking <- as.factor(yelp.chinese$business.parking)
+ggplot(yelp.chinese)+
+  geom_violin(aes(x=business.parking,y=stars,group=business.parking,fill=business.parking))+
+  scale_fill_brewer(palette = "Reds")
+
+glm.3 <- glm(better~sentiment+RestaurantsPriceRange2+business.parking,family = binomial(link = "logit"),data = yelp.chinese)
+summary(glm.3)
+y.glm.3 <- data.frame(fitted(glm.3))
+y.glm.3$better <- as.factor(ifelse(y.glm.3$fitted.glm.3.>0.5,1,0))
+
+ggplot(y.glm.3)+
+  geom_bar(aes(better,fill = better))
+
+glm.4 <- glm(better~sentiment+RestaurantsPriceRange2+NoiseLevel,family = binomial(link = "logit"),data = yelp.chinese)
+summary(glm.4)
+
+y.glm.4 <- data.frame(fitted(glm.4))
+y.glm.4$better <- as.factor(ifelse(y.glm.4$fitted.glm.4.>0.5,1,0))
+
+ggplot(y.glm.4)+
+  geom_bar(aes(better,fill = better))
+
+# multinomial models
+yelp.chinese$stars <- as.factor(yelp.chinese$stars)
+levels(yelp.chinese$stars)
+stars.freq <- table(yelp.chinese$stars)
+stars.freq
+
+vglm.1 <- polr(ordered(stars)~sentiment, data = yelp.chinese)
+summary(vglm.1) 
+y.hat <- data.frame(predict(vglm.1,type="prob"))
+
+p.1 <- rep(NA,5)
+for (i in 1:5){
+  p.1[i] <- mean(y.hat[,i])
+}
+p.1
+
+# check the goodness of fit
+chisq.test(stars.freq,p.1)
+
+vglm.2 <- polr(ordered(stars)~sentiment+RestaurantsPriceRange2+NoiseLevel, data = yelp.chinese)
+summary(vglm.2)
+y.hat2 <- data.frame(predict(vglm.2,type="prob"))
+
+p.2 <- rep(NA,5)
+for (i in 1:5){
+  p.2[i] <- mean(y.hat2[,i])
+}
+p.2
+
+# check the goodness of fit
+chisq.test(stars.freq,p.2) # well, the fit is still not good
+
+
+  
+
+# multilevel models 
+# combine users info
+colnames(user)[3] <- "avg.star.user"
+yelp.chinese <- left_join(yelp.chinese,user,by="user_id")
+
+yelp.chinese$stars <- as.numeric(yelp.chinese$stars)
+ggplot(yelp.chinese)+
+  geom_jitter(aes(avg.star.user,stars,color=stars))
+
+group.lm <- lm(stars~avg.star.user,data = yelp.chinese)
+display(group.lm)
+plot(group.lm,which=1) # multilevel linear models seem not to be our choice
+
+group.multinom <- polr(ordered(stars)~avg.star.user,data = yelp.chinese)
+summary(group.multinom)
+y.h <- data.frame(predict(group.multinom,type="prob"))
+
+p.group <- rep(NA,5)
+for (i in 1:5){
+  p.group[i] <- mean(y.h[,i])
+}
+p.group
+
+chisq.test(stars.freq,p.group) 
+
+# multilevel multinomial models
+# let's start from multilevel logit model
+
+mllm.1 <- glmer(better ~ sentiment+(1|avg.star.user),family=binomial(link="logit"),data = yelp.chinese)
+summary(mllm.1)
+binnedplot(fitted(mllm.1),residuals(mllm.1,type="response")) # well the residual plot looks awful...
+
+
+mllm.2 <- glmer(better ~ sentiment+sentiment+RestaurantsPriceRange2+business.parking+(1|avg.star.user),family=binomial(link="logit"),data = yelp.chinese)
+summary(mllm.2)
+binnedplot(fitted(mllm.2),residuals(mllm.2,type="response")) # not so much better
+
+# maybe we should try bayesian? add prior info for prediction?
+
+# FAIL...takes forever to run 
+# stan.1 <- stan_glmer(better ~ sentiment+sentiment+RestaurantsPriceRange2+business.parking+(1|avg.star.user),family=binomial(link="logit"),data = yelp.chinese)
+
+# add restaurants' public rating as random effect
+business.rating <- info.chinese%>%
+  select(business_id,stars)
+
+colnames(business.rating)[2] <- "p.rating"
+yelp.chinese <- left_join(yelp.chinese,business.rating,by="business_id")
+
+mllm.3 <- glmer(better ~ sentiment+sentiment+(1|avg.star.user)+(1|p.rating),family=binomial(link="logit"),data = yelp.chinese)
+summary(mllm.3)
+binnedplot(fitted(mllm.3),residuals(mllm.3,type="response")) # better? the weird trend still exists...
+
+# try to predict with our model
+pred <- data.frame(predict(mllm.3,type="response"))
+colnames(pred) <- "predict"
+pred$bi <- as.factor(ifelse(pred$predict>0.5,1,0))
+
+gridExtra::grid.arrange(
+ggplot(pred)+
+  geom_bar(aes(bi,fill=bi)),
+ggplot(yelp.chinese)+
+  geom_bar(aes(better,fill = better)),
+ncol=2
+)
+
+
+
