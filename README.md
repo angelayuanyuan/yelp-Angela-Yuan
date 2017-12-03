@@ -1,5 +1,6 @@
 # Predict Ratings for Chinese Restaurants using Sentiment Analysis 
-<br>
+![chinese-food](https://user-images.githubusercontent.com/31863572/33522412-4b8c3cb6-d7ba-11e7-93df-8eba1b6cde82.jpg)
+
 
 ## 1. Read Yelp Data :ramen:
 <br>
