@@ -99,23 +99,23 @@ Review length seems to be related to personal habits rather than restaurants' qu
 
 The ratings are not normally distributed, we might want to use logit or multinomial models<br />
 
-- **logistic models** -
+- **logistic models** 
 
 Try split the data into ratings higher than 3 stars and ratings lower than 3 stars<br />
 
 <img width="478" alt="emoji 2" src="https://user-images.githubusercontent.com/31863572/33521993-8bb28968-d7af-11e7-86c1-886fdfa2ba55.png">
 
 
-- **multinomial models** -
+- **multinomial models** 
 
 Using chi square test for testing the goodness of fit
 
-- **multilevel models** -
+- **multilevel models** 
 
 Still, linear multilevel models don't suit our data<br />
 Therefore we try fitting multilevel logit models and multilevel multinomial models
 
-- **multilevel logit models** -
+- **multilevel logit models** 
 
 Random Effect: Users' avarage rating on Yelp<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Restaurants' rating on Yelp
