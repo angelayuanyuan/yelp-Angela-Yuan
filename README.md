@@ -13,7 +13,7 @@ SQL file reading script:<br />
 
 ## 2. Load Data :rice:
 <br>
-[data files]: https://drive.google.com/drive/u/0/folders/1_4749ED32FJuprWEspjkIkFQJDiH1yAX
+[data files]: https://drive.google.com/drive/folders/1_4749ED32FJuprWEspjkIkFQJDiH1yAX?usp=sharing
 
 ## 3. Data Manipulation :stew:
 <br>
