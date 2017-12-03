@@ -82,7 +82,7 @@ Users don't tend to give really low ratings
 
 ## 8. Regression Analysis :bulb:
 - **sentiment polarity model**<br />
-Regression models and results in yelp.analysis.R sript
+Regression models and results in yelp.analysis.R script
 
 In this model, we use [sentimentr]https://cran.r-project.org/web/packages/sentimentr/sentimentr.pdf package to assign sentiment scores for each review text
 
