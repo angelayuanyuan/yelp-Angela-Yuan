@@ -1,4 +1,4 @@
-# Predict ratings for Chinese restaurants using sentiment analysis :fork_and_knife:
+# Predict Ratings for Chinese Restaurants using Sentiment Analysis 
 <br>
 
 ## 1. Read Yelp Data :ramen:
