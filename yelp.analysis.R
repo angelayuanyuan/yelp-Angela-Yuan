@@ -343,7 +343,8 @@ yelp.chinese <- left_join(yelp.chinese,attr.chinese, by= "business_id")
 yelp.chinese$business.parking[is.na(yelp.chinese$business.parking)] <- 0
 
 # first, let's review how our data looks like
-hist(yelp.chinese$stars) # definetly not normal
+ggplot(yelp.chinese)+
+  geom_bar(aes(stars))# definetly not normal
 hist(yelp.chinese$sentiment)
 
 # simple linear models
@@ -467,8 +468,7 @@ p.group
 
 chisq.test(stars.freq,p.group) 
 
-# multilevel multinomial models
-# let's start from multilevel logit model
+# multilevel logit models
 
 mllm.1 <- glmer(better ~ sentiment+(1|avg.star.user),family=binomial(link="logit"),data = yelp.chinese)
 summary(mllm.1)
@@ -497,12 +497,12 @@ binnedplot(fitted(mllm.3),residuals(mllm.3,type="response")) # better? the weird
 
 # try to predict with our model
 pred <- data.frame(predict(mllm.3,type="response"))
-colnames(pred) <- "predict"
-pred$bi <- as.factor(ifelse(pred$predict>0.5,1,0))
+colnames(pred) <- "prob"
+pred$Predict <- as.factor(ifelse(pred$prob>0.5,1,0))
 
-gridExtra::grid.arrange(
+gridExtra::grid.arrange (
 ggplot(pred)+
-  geom_bar(aes(bi,fill=bi)),
+  geom_bar(aes(Predict,fill=Predict)),
 ggplot(yelp.chinese)+
   geom_bar(aes(better,fill = better)),
 ncol=2
