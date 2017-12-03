@@ -491,7 +491,7 @@ business.rating <- info.chinese%>%
 colnames(business.rating)[2] <- "p.rating"
 yelp.chinese <- left_join(yelp.chinese,business.rating,by="business_id")
 
-mllm.3 <- glmer(better ~ sentiment+sentiment+(1|avg.star.user)+(1|p.rating),family=binomial(link="logit"),data = yelp.chinese)
+mllm.3 <- glmer(better ~ sentiment+(1+sentiment|avg.star.user)+(1|p.rating),family=binomial(link="logit"),data = yelp.chinese)
 summary(mllm.3)
 binnedplot(fitted(mllm.3),residuals(mllm.3,type="response")) # better? the weird trend still exists...
 
