@@ -4,11 +4,7 @@
 ## 1. Read Yelp Data :ramen:
 <br>
 JSON file reading script: <br />
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_yelp_data_business.R, <br />
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_yelp_data_checkin.R, <br />
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_yelp_data_photo.R,<br />
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_yelp_data_tip.R,<br />
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_yelp_data_user.R<br />
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_yelp_data_business.R, read_yelp_data_checkin.R, read_yelp_data_photo.R, read_yelp_data_tip.R, read_yelp_data_user.R                          
 <br>
 [coding credit]: https://github.com/dpliublog/yelp_data_challenge_R10<br />
 <br>
@@ -53,6 +49,26 @@ Looks like dim sum and fried rice are popular dishes
 - **How does sentiment words related to ratings?**
 ![sentiment and rating](https://user-images.githubusercontent.com/31863572/33521635-ba01e944-d7a5-11e7-8262-1139b856d793.png)
 
-Okay, we see something weird here, some words with negative sentiment scores actually indicate pretty decent ratings
+Okay, we see something weird here, some words with negative sentiment scores actually indicate pretty decent ratings.<br />
+
+How did that happened?
+![score and rating](https://user-images.githubusercontent.com/31863572/33521653-56f327a4-d7a6-11e7-9e26-2a2db8c56918.png)
+
+Negative words like "die","disappoint" don't necessarily means dissatisfaction, people say things like "the food is to die for!!", "the food really doesn't disappoint us..."
+
+- **Can we predict ratings using sentiment score?**
+![sentiment prediction](https://user-images.githubusercontent.com/31863572/33521712-ad5db0a4-d7a7-11e7-92be-c285f4d251f5.png)
+
+Seems promising:sunglasses:
+
+## 7. Users info EDA
+Before going into prediction, let's take a step back by looking at how the users' rating data looks like
+
+![number of reviews per user](https://user-images.githubusercontent.com/31863572/33521729-45d9f540-d7a8-11e7-855a-914e448d780c.png)
+
+Wow...we can't tell anything from it
+Try remove the outliers so we could actually see something
+
+![number of reviews per user without outliers](https://user-images.githubusercontent.com/31863572/33521743-afa7d654-d7a8-11e7-8ac1-0f63db013c1a.png)
 
 
