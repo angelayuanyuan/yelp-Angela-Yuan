@@ -65,6 +65,7 @@ Seems promising:sunglasses:
 Before going into prediction, let's take a step back by looking at how the users' rating data looks like
 
 - **How many reviews do users usually write**
+
 ![number of reviews per user](https://user-images.githubusercontent.com/31863572/33521729-45d9f540-d7a8-11e7-855a-914e448d780c.png)
 
 Wow...we can't tell anything from it<br />
@@ -80,7 +81,8 @@ Most users don't give a lot of reviews
 Users don't tend to give really low ratings
 
 ## 8. Regression Analysis :bulb:
-- **sentiment polarity model**
+- **sentiment polarity model**<br />
+Regression models and results in yelp.analysis.R sript
 
 In this model, we use [sentimentr]https://cran.r-project.org/web/packages/sentimentr/sentimentr.pdf package to assign sentiment scores for each review text
 
@@ -97,10 +99,27 @@ Review length seems to be related to personal habits rather than restaurants' qu
 
 The ratings are not normally distributed, we might want to use logit or multinomial models<br />
 
--**logistic models**-
+- **logistic models** -
 
 Try split the data into ratings higher than 3 stars and ratings lower than 3 stars<br />
 
 <img width="478" alt="emoji 2" src="https://user-images.githubusercontent.com/31863572/33521993-8bb28968-d7af-11e7-86c1-886fdfa2ba55.png">
+
+
+- **multinomial models** -
+
+Using chi square test for testing the goodness of fit
+
+- **multilevel models** -
+
+Still, linear multilevel models don't suit our data<br />
+Therefore we try fitting multilevel logit models and multilevel multinomial models
+
+- **multilevel logit models** -
+
+Random Effect: Users' avarage rating on Yelp<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Restaurants' rating on Yelp
+
+
 
 
