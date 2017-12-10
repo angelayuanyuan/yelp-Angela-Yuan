@@ -376,6 +376,7 @@ y.glm.1$better <- as.factor(ifelse(y.glm.1$fitted.glm.1.>0.5,1,0))
 ggplot(y.glm.1)+
   geom_bar(aes(better,fill = better)) # we overestimate the difference of numbers between restaurants with above 3 stars and below 3 stars
 
+summary(yelp.chinese$sentiment)
 glm.2 <- glm(better~sentiment+RestaurantsPriceRange2+business.parking+NoiseLevel,family = binomial(link = "logit"),data = yelp.chinese)
 summary(glm.2) # perfect seperation
 
@@ -414,34 +415,17 @@ levels(yelp.chinese$stars)
 stars.freq <- table(yelp.chinese$stars)
 stars.freq
 
-vglm.1 <- polr(ordered(stars)~sentiment, data = yelp.chinese)
+yelp.chinese$stars <- as.numeric(yelp.chinese$stars)
+vglm.1 <- polr(ordered(stars)~sentiment, data = subset(yelp.chinese,yelp.chinese$sentiment<=0.3))
 summary(vglm.1) 
 y.hat <- data.frame(predict(vglm.1,type="prob"))
 
-p.1 <- rep(NA,5)
-for (i in 1:5){
-  p.1[i] <- mean(y.hat[,i])
-}
-p.1
 
-# check the goodness of fit
-chisq.test(stars.freq,p.1)
-
-vglm.2 <- polr(ordered(stars)~sentiment+RestaurantsPriceRange2+NoiseLevel, data = yelp.chinese)
+vglm.2 <- polr(ordered(stars)~sentiment+RestaurantsPriceRange2+NoiseLevel, data = subset(yelp.chinese,yelp.chinese$sentiment<=0.3))
 summary(vglm.2)
 y.hat2 <- data.frame(predict(vglm.2,type="prob"))
 
-p.2 <- rep(NA,5)
-for (i in 1:5){
-  p.2[i] <- mean(y.hat2[,i])
-}
-p.2
 
-# check the goodness of fit
-chisq.test(stars.freq,p.2) # well, the fit is still not good
-
-
-  
 
 # multilevel models 
 # combine users info
@@ -452,61 +436,113 @@ yelp.chinese$stars <- as.numeric(yelp.chinese$stars)
 ggplot(yelp.chinese)+
   geom_jitter(aes(avg.star.user,stars,color=stars))
 
-group.lm <- lm(stars~avg.star.user,data = yelp.chinese)
-display(group.lm)
-plot(group.lm,which=1) # multilevel linear models seem not to be our choice
+# add restaurants' public rating as random effect
+colnames(info.chinese)[10] <- "yelp.rating"
 
-group.multinom <- polr(ordered(stars)~avg.star.user,data = yelp.chinese)
-summary(group.multinom)
-y.h <- data.frame(predict(group.multinom,type="prob"))
+yelp.rating <- info.chinese%>%
+  select(business_id,yelp.rating)
 
-p.group <- rep(NA,5)
-for (i in 1:5){
-  p.group[i] <- mean(y.h[,i])
-}
-p.group
+yelp.chinese <- left_join(yelp.chinese,yelp.rating)
+ggplot(yelp.chinese)+
+  geom_jitter(aes(yelp.rating,stars,color=stars))
 
-chisq.test(stars.freq,p.group) 
+
 
 # multilevel logit models
 
-mllm.1 <- glmer(better ~ sentiment+(1|avg.star.user),family=binomial(link="logit"),data = yelp.chinese)
+# but let's start simple
+glm.5 <- glm(better~sentiment+RestaurantsPriceRange2+business.parking+NoiseLevel+yelp.rating+avg.star.user,family = binomial(link = "logit"),data = yelp.chinese)
+summary(glm.5)
+
+y.glm.5 <- data.frame(fitted(glm.5))
+y.glm.5$better <- as.factor(ifelse(y.glm.5$fitted.glm.5.>0.5,1,0))
+
+ggplot(y.glm.5)+
+  geom_bar(aes(better,fill = better))
+
+mllm.1 <- glmer(better ~ sentiment+(1|avg.star.user)+(1|yelp.rating),family=binomial(link="logit"),data = yelp.chinese)
 summary(mllm.1)
 binnedplot(fitted(mllm.1),residuals(mllm.1,type="response")) # well the residual plot looks awful...
 
 
-mllm.2 <- glmer(better ~ sentiment+sentiment+RestaurantsPriceRange2+business.parking+(1|avg.star.user),family=binomial(link="logit"),data = yelp.chinese)
+mllm.2 <- glmer(better ~ sentiment+RestaurantsPriceRange2+business.parking+(1|avg.star.user)+(1|yelp.rating),family=binomial(link="logit"),data = yelp.chinese)
 summary(mllm.2)
 binnedplot(fitted(mllm.2),residuals(mllm.2,type="response")) # not so much better
+
+mllm.3 <- glmer(better ~ sentiment+RestaurantsPriceRange2+business.parking+(1|yelp.rating),family=binomial(link="logit"),data = yelp.chinese)
+summary(mllm.3)
+binnedplot(fitted(mllm.3),residuals(mllm.3,type="response"))
+
+mllm.4 <- glmer(better ~ sentiment+RestaurantsPriceRange2+business.parking+yelp.rating+(1+yelp.rating|avg.star.user),family=binomial(link="logit"),data = yelp.chinese)
+summary(mllm.4)
+binnedplot(fitted(mllm.4),residuals(mllm.4,type="response"))
+
+mllm.5 <- glmer(better ~ sentiment+RestaurantsPriceRange2+business.parking+avg.star.user+(1|yelp.rating),family=binomial(link="logit"),data = yelp.chinese)
+summary(mllm.5)
+binnedplot(fitted(mllm.5),residuals(mllm.5,type="response"))
 
 # maybe we should try bayesian? add prior info for prediction?
 
 # FAIL...takes forever to run 
 # stan.1 <- stan_glmer(better ~ sentiment+sentiment+RestaurantsPriceRange2+business.parking+(1|avg.star.user),family=binomial(link="logit"),data = yelp.chinese)
 
-# add restaurants' public rating as random effect
-business.rating <- info.chinese%>%
-  select(business_id,stars)
-
-colnames(business.rating)[2] <- "p.rating"
-yelp.chinese <- left_join(yelp.chinese,business.rating,by="business_id")
-
-mllm.3 <- glmer(better ~ sentiment+(1+sentiment|avg.star.user)+(1|p.rating),family=binomial(link="logit"),data = yelp.chinese)
-summary(mllm.3)
-binnedplot(fitted(mllm.3),residuals(mllm.3,type="response")) # better? the weird trend still exists...
-
 # try to predict with our model
-pred <- data.frame(predict(mllm.3,type="response"))
-colnames(pred) <- "prob"
-pred$Predict <- as.factor(ifelse(pred$prob>0.5,1,0))
+# 2
+pred.2 <- data.frame(predict(mllm.2,type="response"))
+colnames(pred.2) <- "prob"
+pred.2$Predict <- as.factor(ifelse(pred.2$prob>0.5,1,0))
 
 gridExtra::grid.arrange (
-ggplot(pred)+
+  ggplot(pred.2)+
+    geom_bar(aes(Predict,fill=Predict)),
+  ggplot(yelp.chinese)+
+    geom_bar(aes(better,fill = better)),
+  ncol=2
+)
+
+
+# 3
+pred.3 <- data.frame(predict(mllm.3,type="response"))
+colnames(pred.3) <- "prob"
+pred.3$Predict <- as.factor(ifelse(pred.3$prob>0.5,1,0))
+
+gridExtra::grid.arrange (
+  ggplot(pred.3)+
+    geom_bar(aes(Predict,fill=Predict)),
+  ggplot(yelp.chinese)+
+    geom_bar(aes(better,fill = better)),
+  ncol=2
+)
+
+
+# 4
+pred.4 <- data.frame(predict(mllm.4,type="response"))
+colnames(pred.4) <- "prob"
+pred.4$Predict <- as.factor(ifelse(pred.4$prob>0.5,1,0))
+
+gridExtra::grid.arrange (
+ggplot(pred.4)+
   geom_bar(aes(Predict,fill=Predict)),
 ggplot(yelp.chinese)+
   geom_bar(aes(better,fill = better)),
 ncol=2
 )
 
+# 5
+pred.5 <- data.frame(predict(mllm.5,type="response"))
+colnames(pred.5) <- "prob"
+pred.5$Predict <- as.factor(ifelse(pred.5$prob>0.5,1,0))
 
+gridExtra::grid.arrange (
+  ggplot(pred.5)+
+    geom_bar(aes(Predict,fill=Predict)),
+  ggplot(yelp.chinese)+
+    geom_bar(aes(better,fill = better)),
+  ncol=2
+)
+
+pred <- as.vector(summary(pred.5$Predict))
+obs <- as.vector(p.binom)
+
+chisq.test(p.binom,pred)
 
