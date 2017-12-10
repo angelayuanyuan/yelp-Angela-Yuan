@@ -105,18 +105,32 @@ Try split the data into ratings higher than 3 stars and ratings lower than 3 sta
 
 <img width="478" alt="emoji 2" src="https://user-images.githubusercontent.com/31863572/33521993-8bb28968-d7af-11e7-86c1-886fdfa2ba55.png">
 
+In our regression output, the log odds is extremely big, which means we didn't include sufficient information in our model building process or there is outliers in the data<br />
+
 
 - **multinomial models** 
 
-Using chi square test for testing the goodness of fit
+Using the predictors as above to fit multinomial models would cause the same problem, so we think about what other information can we add to our model. 
+
+From the users' perspective, different users have different standard when giving ratings. Some users tend to have a strict requirements for dining, so the ratings they give on Yelp will be generally low. Some users might be more tolerating, even though the quality of restaurants are not that satisfying, they are still giving quite decent ratings. So the underlying standard of each users is a random effect. Therefore, we go back to the Users dataset, and calculate the average ratings per user and add that information in our regression models. 
+
+From the business's perspective, their ratings are definitely related to their own quality. Since we only have data in a limited period of time, we might not be able to get a full picture of how the businesses perform over the years. However, wo do have their ratings on Yelp, which is a cumulated results over a longer period. So we go ahead and add that in too.
+
+![users rating](https://user-images.githubusercontent.com/31863572/33800599-2980e782-dd11-11e7-8c4d-d230b7c12165.png)
+
+![yelp rating](https://user-images.githubusercontent.com/31863572/33800701-b3f22b0e-dd13-11e7-8ab3-20b111df47ae.png)
+
 
 - **multilevel models** 
 
 Still, linear multilevel models don't suit our data<br />
 Therefore we try fitting multilevel logit models and multilevel multinomial models
 
-- **multilevel logit models** 
+- **multilevel logit models**
 
+![users rating](https://user-images.githubusercontent.com/31863572/33800599-2980e782-dd11-11e7-8c4d-d230b7c12165.png)
+
+Above is a plot of users' average rating versus users' average rating
 Random Effect: Users' avarage rating on Yelp<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Restaurants' rating on Yelp
 
