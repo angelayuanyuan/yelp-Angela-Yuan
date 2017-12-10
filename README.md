@@ -105,14 +105,14 @@ Try split the data into ratings higher than 3 stars and ratings lower than 3 sta
 
 <img width="478" alt="emoji 2" src="https://user-images.githubusercontent.com/31863572/33521993-8bb28968-d7af-11e7-86c1-886fdfa2ba55.png">
 
-In our regression output, the log odds is extremely big, which means we didn't include sufficient information in our model building process or there is outliers in the data<br />
+In our regression output, the log odds is extremely big, which means we didn't include sufficient information in our model building process or there are outliers in the data<br />
 
 
 - **multinomial models** 
 
 Using the predictors as above to fit multinomial models would cause the same problem, so we think about what other information can we add to our model. 
 
-From the users' perspective, different users have different standard when giving ratings. Some users tend to have a strict requirements for dining, so the ratings they give on Yelp will be generally low. Some users might be more tolerating, even though the quality of restaurants are not that satisfying, they are still giving quite decent ratings. So the underlying standard of each users is a random effect. Therefore, we go back to the Users dataset, and calculate the average ratings per user and add that information in our regression models. 
+From the users' perspective, different users have different standard when giving ratings. Some users tend to have a strict requirements for dining, so the ratings they give on Yelp will be generally low. Some users might be more tolerating, even though the quality of restaurants are not that satisfying, they are still giving quite decent ratings. So the underlying standard of each users is a factor that influences the outcome. Therefore, we go back to the Users dataset, and calculate the average ratings per user and add that information in our regression models. 
 
 From the business's perspective, their ratings are definitely related to their own quality. Since we only have data in a limited period of time, we might not be able to get a full picture of how the businesses perform over the years. However, wo do have their ratings on Yelp, which is a cumulated results over a longer period. So we go ahead and add that in too.
 
@@ -135,11 +135,11 @@ Therefore we try fitting multilevel logit models
 
 In this model, we split the restaurants into two categories, those who have users' ratings lower than 3 stars, and those who have users' ratings equal or higher than three stars. 
 
-Our main objective is to find out whether we can use the sentiment which users' have shown in thier reviews to predict the ratings they might give to a certain restaurant. Besides the sentiment score of reviews, our predictors also include: indicator for restaurants' price range, parking availability and users' average ratings(all the ratings they have given on YELP/ numbers of reviews they have posted on YELP). However, by looking at our outcome data or looking at our residual plots when running a linear regression, we could see seperate trends, since the data contains repeated measurement for restaurants. Therefore, restaurants' public ratings (the one rating which shows up at the business page of certain restaurant on YELP) is our group level predictor, which cover the information of different restaurants' random effect to our model outcome.
+Our main objective is to find out whether we can use the sentiment which users' have shown in thier reviews to predict the ratings they might give to a certain restaurant. Besides the sentiment score of reviews, our predictors also include: indicator for restaurants' price range, parking availability and users' average ratings(all the ratings they have given on YELP/ numbers of reviews they have posted on YELP). However, by looking at our outcome data or looking at our residual plots when running a linear regression, we could see seperate trends, since the data contains repeated measurement for restaurants. Therefore, restaurants' public ratings (the one rating which shows up at the business page of a certain restaurant on YELP) is our group level predictor, which cover the information of different restaurants' random effect to our model outcome.
 
 *2) regression output*
 
-After running the regression, we find two predictors that have relatively big influence on users' ratings, the sentiment score of the review and users' average rating on YELP. On the other hand, whether the restaurant has parking slot and the price range of the restaurant doesn't matter much in users' rating process. The results are quite intuitive, people who express positve emotions in their reviews tend to give higher ratings, and people who have the habit, although we don't know the exact reason, of giving decent ratings tend to give higher ratings. Of course, among these two factors, sentiment score plays a more important role when predicting ratings.
+After running the regression, we find two predictors that have relatively big influence on users' ratings, the sentiment score of the review and users' average rating on YELP. On the other hand, whether the restaurant has parking slot and the price range of the restaurant doesn't matter much in users' rating process. The results are quite intuitive, people who express positve emotions in their reviews tend to give higher ratings, and people who have the habit, although we don't know the exact reason why, of giving decent ratings tend to give higher ratings. Of course, among these two factors, sentiment score plays a more important role when predicting ratings.
 
 *3) model checking*
 
@@ -157,7 +157,7 @@ Well, it's not! :dancer:
 
 *4) discussion and implication*
 
-Using sentiment score to predict ratings can be fun, but it is not that accurate. Well it can tell whether a restaurant has above average quality or below, it is difficult to predict mild difference in ratings. After all, different person has different language habit and rating habit. People tend to go write reviews when the service they receive is remarkably pleasant or remarkably unpleasant. Some people swear when they really hate something and some people swear when they really love something. Some do both. These are all information that might affect our model but we are not taking into account of.
+Using sentiment score to predict ratings can be fun, but it is not that accurate. Well it can tell whether a restaurant has above average quality or below, it is difficult to predict mild difference in ratings. After all, different person has different language habit and rating habit. People tend to go write reviews when the service they receive is remarkably pleasant or remarkably unpleasant. Some people swear when they really hate something and some people swear when they really love something. Some do both. These are all information that might affect our model but we are not taking into account of right now.
 
 If we are going to continue our analysis, we might add text clustering method, which can reduce the chance of interpreting words to a wrong context. I'll update the analysis in the near future.:muscle:
 
