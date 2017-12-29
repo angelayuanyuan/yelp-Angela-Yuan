@@ -22,6 +22,9 @@ library(sentimentr)
 library(VGAM)
 library(wesanderson)
 library(rstanarm)
+library(ggraph)
+library(igraph)
+library(tibble)
 
 # load data
 load("~/Desktop/yelp github/Yelp/rdata/info.chinese.Rdata")
@@ -63,7 +66,7 @@ attr.chinese <- attr.chinese%>%
 rating.chinese <- yelp.chinese %>%
   group_by(business_id)%>%
   arrange(date)%>%
-  summarise(rating = mean(stars))
+  summarise(rating = mean(stars)) #average users' rating per restaurant
 
 rating.chinese <- merge(rating.chinese,attr.chinese,by="business_id")
 
@@ -109,6 +112,8 @@ https://plot.ly/~angelayuanyuan/1/ # just in case you're interested in where are
 ###########################
 ###### Text Analysis ######
 ###########################
+
+# REVIEW DATA
 
 # add new customized stop word
 my_stop_word <- data.frame(word=character(6))
@@ -158,6 +163,57 @@ bigrams.united <- bigrams.filtered %>%
 # word cloud
 bigrams.united %>%
   with(wordcloud(bigram, n, max.words = 50,colors=brewer.pal(8, "Dark2"),random.order=FALSE,rot.per=0.35))
+
+
+# TIP DATA
+
+# tokenizing by one gram
+tip.chinese$id <- c(1:length(tip.chinese$text))
+
+tip.Chinese.word <- tip.chinese %>%
+  group_by(id)%>%
+  mutate(linenumber = row_number())%>%
+  unnest_tokens(word, text)%>%
+  anti_join(stop_words)%>%
+  anti_join(my_stop_word)%>%
+  filter(str_detect(word, "^[a-z']+$"))%>%
+  ungroup()
+
+tip.word.freq <- tip.Chinese.word%>%
+  count(word,sort=TRUE)
+
+# word cloud
+tip.word.freq %>%
+  with(wordcloud(word, n, max.words = 50,colors=brewer.pal(8, "Dark2"),random.order=FALSE,rot.per=0.35))
+
+# tokenizing by bigram
+tip.Chinese.bigrams <- tip.chinese %>%
+  group_by(id)%>%
+  mutate(linenumber = row_number())%>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2)
+
+tip.bigrams.freq <- tip.Chinese.bigrams%>%
+  ungroup()%>%
+  count(bigram, sort = TRUE)
+
+tip.bigrams.seperated <- tip.bigrams.freq%>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+
+tip.bigrams.filtered <- tip.bigrams.seperated %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word) %>%
+  filter(!word1 %in% my_stop_word$word) %>%
+  filter(!word2 %in% my_stop_word$word)%>%
+  filter(str_detect(word1, "^[a-z']+$"))%>%
+  filter(str_detect(word1, "^[a-z']+$"))
+
+tip.bigrams.united <- tip.bigrams.filtered %>%
+  unite(bigram, word1, word2, sep = " ")
+
+# word cloud
+tip.bigrams.united %>%
+  with(wordcloud(bigram, n, max.words = 50,colors=brewer.pal(8, "Dark2"),random.order=FALSE,rot.per=0.35))
+
 
 # sentiment analysis
 get_sentiments("afinn")
@@ -235,8 +291,107 @@ ggplot(word.afinn, aes(reviews, average_stars)) +
   xlab("Number of Reviews") +
   ylab("Average Stars")
 
+# check the 'abnormal' sentiment word with ratings
+# 'disappoint'
+review$disappoint <- ifelse(str_detect(review$text,"disappoint")==TRUE,review$text,NA)
+review.disappoint <- na.omit(review,col="disappoint")
+
+# 'die'
+review$die <- ifelse(str_detect(review$text,"die")==TRUE,review$text,NA)
+review.die <- na.omit(review,col="die")
+
+# sentiment bigram network
+# overall sentiment
+bigrams.seperated <- bigrams.freq%>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+
+sentiment.bigrams <- bigrams.seperated %>%
+  filter(word1 %in% AFINN$word|word2 %in% AFINN$word) %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word) %>%
+  filter(str_detect(word1, "^[a-z']+$"))%>%
+  filter(str_detect(word1, "^[a-z']+$"))
 
 
+bigram_graph <- sentiment.bigrams %>%
+  filter(n >150) %>%
+  graph_from_data_frame()
+
+set.seed(2017)
+
+ggraph(bigram_graph, layout = "nicely") +
+  geom_edge_link(aes(edge_alpha = n),arrow = a) +
+  geom_node_point(color = "lightblue",size=5) +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)+
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)+
+  theme_void()
+
+# postive sentiment
+AFFIN.pos <- AFINN%>%
+  filter(score>0)
+
+pos.sentiment.bigrams <- bigrams.seperated %>%
+  filter(word1 %in% AFFIN.pos$word|word2 %in% AFFIN.pos$word) %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word) %>%
+  filter(str_detect(word1, "^[a-z']+$"))%>%
+  filter(str_detect(word1, "^[a-z']+$"))
+
+
+pos.bigram_graph <- pos.sentiment.bigrams %>%
+  filter(n >150) %>%
+  graph_from_data_frame()
+
+set.seed(2017)
+
+ggraph(pos.bigram_graph, layout = "nicely") +
+  geom_edge_link(aes(edge_alpha = n),arrow = a) +
+  geom_node_point(color = "lightblue",size=5) +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)+
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)+
+  theme_void()
+
+# negative sentiment
+AFFIN.neg <- AFINN%>%
+  filter(score<0)
+
+neg.sentiment.bigrams <- bigrams.seperated %>%
+  filter(word1 %in% AFFIN.neg$word|word2 %in% AFFIN.neg$word) %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word) %>%
+  filter(str_detect(word1, "^[a-z']+$"))%>%
+  filter(str_detect(word1, "^[a-z']+$"))
+
+
+neg.bigram_graph <- neg.sentiment.bigrams %>%
+  filter(n >50) %>%
+  graph_from_data_frame()
+
+set.seed(2017)
+
+ggraph(neg.bigram_graph, layout = "nicely") +
+  geom_edge_link(aes(edge_alpha = n),arrow = a) +
+  geom_node_point(color = "lightblue",size=5) +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)+
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)+
+  theme_void()
+
+# tip sentiment analysis
+tip.sentiment <- tip.Chinese.word %>%
+  inner_join(AFINN, by = "word") %>%
+  group_by(id,word) %>%
+  summarize(sentiment = mean(score)) # we assume more positive sentiment in this data, since people tend to give tips or more tips when they get satisfied service
+
+# tip sentiment distribution
+quantile(tip.sentiment$sentiment,.5)
+
+ggplot(tip.sentiment)+
+  geom_bar(aes(sentiment),fill="salmon")+
+  geom_vline(xintercept = 2,linetype=2,color="white")+
+  labs(title = "Sentiment Score of Tips")+
+  theme(plot.title = element_text(hjust = 0.5)) # as we expected...
+  
+  
 ###########################
 ######## EDA Users ########
 ###########################
