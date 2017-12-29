@@ -9,7 +9,7 @@
 JSON file reading script: <br />
                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_yelp_data_business.R, read_yelp_data_checkin.R, read_yelp_data_photo.R, read_yelp_data_tip.R, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_yelp_data_user.R                          
 <br>
-[coding credit]: https://github.com/dpliublog/yelp_data_challenge_R10<br />
+[JSON file reading coding credit]: https://github.com/dpliublog/yelp_data_challenge_R10<br />
 <br>
 SQL file reading script:<br />                          
                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yelp_review_Chinese.R
