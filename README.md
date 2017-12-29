@@ -183,7 +183,7 @@ Well, it's not! :dancer:
 
 *4) discussion and implication*
 
-Using sentiment score to predict ratings can be fun, but it is not that accurate. Well it can tell whether a restaurant has above average quality or below, it is difficult to predict mild difference in ratings. After all, different person has different language habit and rating habit. People tend to go write reviews when the service they receive is remarkably pleasant or remarkably unpleasant. Some people swear when they really hate something and some people swear when they really love something. Some do both. These are all information that might affect our model but we are not taking into account of right now.
+Using sentiment score to predict ratings can be fun, but it is not that accurate. Well it can tell whether a restaurant has above average quality or below, it is difficult to predict mild difference in ratings. After all, different person has different language habit and rating habit. People tend to go write reviews when the service they receive is remarkably pleasant or remarkably unpleasant. Some people swear when they really hate something and some people swear when they really love something. Some do both. These are all information that might affect our model but we are not taking into account of right now. Not to mention the circumstances that we discussed before, where sentiment words are not adjectives but nouns. 
 
 
 
