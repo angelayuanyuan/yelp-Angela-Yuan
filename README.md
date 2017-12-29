@@ -56,6 +56,25 @@ How did that happened?
 
 Negative words like "die","disappoint" don't necessarily means dissatisfaction, people say things like "the food is to die for!!", "the food really doesn't disappoint us..."
 
+- **Are we putting sentiment words into context? Not yet!**
+
+Just as we mentioned above, sentiment words might follow or followed by word that turn them into completely different meanings. 
+
+So let's take a look at the contexts
+![sentient all](https://user-images.githubusercontent.com/31863572/34447242-213dd270-ecb0-11e7-824c-270926bf480b.png)
+
+We could see from the graph, although some bigrams contain sentiment words (gluten *free*, egg *drop* etc), they are not used to discribe restaurants quality related stuff.
+
+Next, we take a step further to explore positive and negative sentiment words in their contexts seperately
+
+**Positve** first~
+![positive](https://user-images.githubusercontent.com/31863572/34447374-405b875a-ecb1-11e7-8c53-626bf097c5e1.png)
+
+It seems that we interprete the postive sentiment words pretty fine
+
+How about **negative** sentiments?
+![negative](https://user-images.githubusercontent.com/31863572/34447440-d31c1140-ecb1-11e7-894c-0106869400ba.png)
+
 - **Can we predict ratings using sentiment score?**
 ![sentiment prediction](https://user-images.githubusercontent.com/31863572/33521712-ad5db0a4-d7a7-11e7-92be-c285f4d251f5.png)
 
@@ -158,8 +177,6 @@ Well, it's not! :dancer:
 *4) discussion and implication*
 
 Using sentiment score to predict ratings can be fun, but it is not that accurate. Well it can tell whether a restaurant has above average quality or below, it is difficult to predict mild difference in ratings. After all, different person has different language habit and rating habit. People tend to go write reviews when the service they receive is remarkably pleasant or remarkably unpleasant. Some people swear when they really hate something and some people swear when they really love something. Some do both. These are all information that might affect our model but we are not taking into account of right now.
-
-If we are going to continue our analysis, we might add text clustering method, which can reduce the chance of interpreting words to a wrong context. I'll update the analysis in the near future.:muscle:
 
 
 
