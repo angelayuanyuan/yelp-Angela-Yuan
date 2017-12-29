@@ -1,5 +1,8 @@
 # Predict Ratings for Chinese Restaurants using Sentiment Analysis 
 <img width="347" alt="screen shot 2017-12-02 at 11 45 55 pm" src="https://user-images.githubusercontent.com/31863572/33522438-00df5aa8-d7bb-11e7-9888-eb558414f4b1.png">
+<br>
+[image credit]: https://leitesculinaria.com/103294/writings-how-to-pair-wine-and-chinese-food.html<br />
+<br>
 
 ## 1. Read Yelp Data :ramen:
 <br>
