@@ -67,13 +67,20 @@ We could see from the graph, although some bigrams contain sentiment words (glut
 
 Next, we take a step further to explore positive and negative sentiment words in their contexts seperately
 
-**Positve** first~
+
+**Positve** sentiments first :thumbsup::thumbsup::thumbsup:
 ![positive](https://user-images.githubusercontent.com/31863572/34447374-405b875a-ecb1-11e7-8c53-626bf097c5e1.png)
 
-It seems that we interprete the postive sentiment words pretty fine
+It seems that we interprete most of the postive sentiment words fine
 
-How about **negative** sentiments?
+
+How about **negative** sentiments :-1::-1::-1:?
 ![negative](https://user-images.githubusercontent.com/31863572/34447440-d31c1140-ecb1-11e7-894c-0106869400ba.png)
+
+What's wrong with *hard boiled*, *earl grey*, *jerk chicken* and so on ??<br />
+They are food names, but unfortunately contain negative sentinent words in their name !!:broken_heart:
+
+Please keep in mind, these situations would definitely cause inaccuracy when we try to predict ratings using sentiment.
 
 - **Can we predict ratings using sentiment score?**
 ![sentiment prediction](https://user-images.githubusercontent.com/31863572/33521712-ad5db0a4-d7a7-11e7-92be-c285f4d251f5.png)
