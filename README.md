@@ -74,7 +74,7 @@ Next, we take a step further to explore positive and negative sentiment words in
 **Positve** sentiments first :thumbsup::thumbsup::thumbsup:
 ![positive](https://user-images.githubusercontent.com/31863572/34447374-405b875a-ecb1-11e7-8c53-626bf097c5e1.png)
 
-It seems that we interprete most of the postive sentiment words fine
+It seems that we interprete most of the postive sentiment words fine. However, bigrams like *overly sweet*, *pretty bad* are actually not expressing positve sentiments.
 
 
 How about **negative** sentiments :-1::-1::-1:?
